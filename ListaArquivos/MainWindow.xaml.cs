@@ -17,6 +17,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace ListaArquivos {
 	/// <summary>
@@ -34,20 +35,21 @@ namespace ListaArquivos {
 		public MainWindow() => InitializeComponent();
 
 		private async Task<string> DirSearch(string sDir) {
-			loadingIcon.Visibility = Visibility.Visible;
+			loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
+			// loadingIcon.Visibility = Visibility.Visible;
 			validDir = true;
 			try {
 				foreach (string f in Directory.GetFiles(sDir)) {
 					total++;
 				}
 				foreach (string d in Directory.GetDirectories(sDir)) {
-					await DirSearch(d);
+					await DirSearch2(d);
 				}
 				//await loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Hidden));
+				loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
 				return null;
-			} catch (Exception e) {
-				//loadingIcon.Visibility = Visibility.Hidden;
-				validDir = false;
+			} catch {
+				//validDir = false;
 				//Console.WriteLine(e.Message);
 				//System.Windows.Forms.MessageBox.Show($"{e.Message}{Environment.NewLine}Favor selecionar um diretório válido.", "Diretório inválido", MessageBoxButtons.OK, MessageBoxIcon.Error);
 				// throw;
@@ -55,8 +57,19 @@ namespace ListaArquivos {
 				return null;
 			} finally {
 				if(!validDir) System.Windows.Forms.MessageBox.Show("Favor selecionar um diretório válido.", "Diretório inválido", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				loadingIcon.Visibility = Visibility.Hidden;
 			}
+		}
+
+		private async Task<string> DirSearch2(string sDir) {
+			try {
+				foreach (string f in Directory.GetFiles(sDir)) {
+					total++;
+				}
+				foreach (string d in Directory.GetDirectories(sDir)) {
+					await DirSearch2(d);
+				}
+				return null;
+			} catch { return null; }
 		}
 
 		private async void select_Dir(object sender, RoutedEventArgs e) {
@@ -71,9 +84,8 @@ namespace ListaArquivos {
 				total = 0;
 				progressBar.Minimum = 0;
 				progressBar.Value = 0;
-
-				//await loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Visible));
-				// loadingIcon.Visibility = Visibility.Visible;
+				// loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
+				// await loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Visible));
 				// var files = Directory.GetFiles("C:\\path", "*.*", SearchOption.AllDirectories);
 
 				folder = new DirectoryInfo(sPath);
@@ -86,10 +98,7 @@ namespace ListaArquivos {
 					// foreach (System.IO.FileInfo fileInfo in folder.EnumerateFiles("*", System.IO.SearchOption.AllDirectories)) {
 					//	total++;
 					//}
-
-					// loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Hidden));
-					// loadingIcon.Visibility = Visibility.Hidden;
-
+					// loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
 					if (total != 0 && validDir) {
 						progressBar.Maximum = total;
 						button1.IsEnabled = true;
@@ -98,8 +107,6 @@ namespace ListaArquivos {
 						progressBar.Value = 0;
 						button1.IsEnabled = false;
 					}
-
-					// textBlock1.Text = "Total de arquivos: " + String.Format("{0:n0}", total);
 				}
 			}
 		}
@@ -111,7 +118,7 @@ namespace ListaArquivos {
 			
 			if (folder.Exists) {
 				foreach (FileInfo fileInfo in folder.GetFiles()) {
-					progressBar.Value += 1;
+					// progressBar.Value += 1;
 					sb.Append(Environment.NewLine);
 					sb.Append(@fileInfo.Length);
 					sb.Append("\t");
@@ -120,6 +127,7 @@ namespace ListaArquivos {
 					sb.Append(@fileInfo.Name);
 					sb.Append("\t");
 					sb.Append(@fileInfo.Extension);
+					progressBar.Dispatcher.Invoke(() => progressBar.Value += 1, DispatcherPriority.Background);
 
 					// @lista = @fileInfo.Length + "\t" + @fileInfo.DirectoryName + "\t" + @fileInfo.Name + "\t" + @fileInfo.Extension + Environment.NewLine;
 					// sb.Append(@lista);
