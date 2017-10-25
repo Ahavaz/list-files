@@ -1,82 +1,39 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-// using System.IO;
-using Delimon.Win32.IO;
-using System.Linq;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Windows.Threading;
 
-namespace ListaArquivos {
-	/// <summary>
-	/// Interaction logic for MainWindow.xaml
-	/// </summary>
+namespace ListaArquivos
+{
 	public partial class MainWindow : Window {
 
 		private String sPath;
 		private Int64 total;
-		private DirectoryInfo folder;
+		private Delimon.Win32.IO.DirectoryInfo folder;
 		private String baseDir = AppDomain.CurrentDomain.BaseDirectory;
 		private Boolean validDir = true;
-		// Thread loadIconThread = new Thread(loadingIcon);
+		private StringBuilder sb;
 
 		public MainWindow() => InitializeComponent();
 
-		private async Task<string> DirSearch(string sDir) {
-			loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
-			// loadingIcon.Visibility = Visibility.Visible;
-			validDir = true;
+		private void DirSearch(string sDir) {
 			try {
-				foreach (string f in Directory.GetFiles(sDir)) {
+				foreach (string f in Delimon.Win32.IO.Directory.GetFiles(sDir)) {
 					total++;
 				}
-				foreach (string d in Directory.GetDirectories(sDir)) {
-					await DirSearch2(d);
+
+				foreach (string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
+					DirSearch(d);
 				}
-				//await loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Hidden));
-				loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
-				return null;
-			} catch {
-				//validDir = false;
-				//Console.WriteLine(e.Message);
-				//System.Windows.Forms.MessageBox.Show($"{e.Message}{Environment.NewLine}Favor selecionar um diretório válido.", "Diretório inválido", MessageBoxButtons.OK, MessageBoxIcon.Error);
-				// throw;
-				// total = 0;
-				return null;
-			} finally {
-				if(!validDir) System.Windows.Forms.MessageBox.Show("Favor selecionar um diretório válido.", "Diretório inválido", MessageBoxButtons.OK, MessageBoxIcon.Error);
-			}
+			} catch { validDir = true; }
 		}
 
-		private async Task<string> DirSearch2(string sDir) {
-			try {
-				foreach (string f in Directory.GetFiles(sDir)) {
-					total++;
-				}
-				foreach (string d in Directory.GetDirectories(sDir)) {
-					await DirSearch2(d);
-				}
-				return null;
-			} catch { return null; }
-		}
-
-		private async void select_Dir(object sender, RoutedEventArgs e) {
+		private void select_Dir(object sender, RoutedEventArgs e) {
 			FolderBrowserDialog folderDialog = new FolderBrowserDialog();
 			folderDialog.ShowNewFolderButton = false;
-			// folderDialog.SelectedPath = AppDomain.CurrentDomain.BaseDirectory;
 			DialogResult result = folderDialog.ShowDialog();
+			//loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
 
 			if (result == System.Windows.Forms.DialogResult.OK) {
 				sPath = folderDialog.SelectedPath;
@@ -84,21 +41,13 @@ namespace ListaArquivos {
 				total = 0;
 				progressBar.Minimum = 0;
 				progressBar.Value = 0;
-				// loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
-				// await loadingIcon.Dispatcher.BeginInvoke((Action)(() => loadingIcon.Visibility = Visibility.Visible));
-				// var files = Directory.GetFiles("C:\\path", "*.*", SearchOption.AllDirectories);
+				folder = new Delimon.Win32.IO.DirectoryInfo(sPath);
 
-				folder = new DirectoryInfo(sPath);
 				if (folder.Exists) {
+					validDir = true;
+					DirSearch(sPath);
+					//loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
 
-					// total = System.IO.Directory.EnumerateFiles(sPath, "*", System.IO.SearchOption.AllDirectories).Count();
-					await DirSearch(sPath);
-
-					// foreach (FileInfo fileInfo in folder.GetFiles()) {
-					// foreach (System.IO.FileInfo fileInfo in folder.EnumerateFiles("*", System.IO.SearchOption.AllDirectories)) {
-					//	total++;
-					//}
-					// loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
 					if (total != 0 && validDir) {
 						progressBar.Maximum = total;
 						button1.IsEnabled = true;
@@ -106,40 +55,45 @@ namespace ListaArquivos {
 					} else {
 						progressBar.Value = 0;
 						button1.IsEnabled = false;
+						textBox.Text = "";
+						textBlock1.Text = "";
+						System.Windows.Forms.MessageBox.Show("Favor selecionar um diretório válido.", "Diretório inválido", MessageBoxButtons.OK, MessageBoxIcon.Error);
 					}
 				}
 			}
 		}
 
-		private async void create_List(object sender, RoutedEventArgs e) {
-			// DirectoryInfo folder = new DirectoryInfo(sPath);
-			String lista = "Tamanho (bytes)\tCaminho\tArquivo\tExtensão";
-			StringBuilder sb = new StringBuilder(lista);
-			
-			if (folder.Exists) {
-				foreach (FileInfo fileInfo in folder.GetFiles()) {
-					// progressBar.Value += 1;
-					sb.Append(Environment.NewLine);
-					sb.Append(@fileInfo.Length);
-					sb.Append("\t");
-					sb.Append(@fileInfo.DirectoryName);
-					sb.Append("\t");
-					sb.Append(@fileInfo.Name);
-					sb.Append("\t");
-					sb.Append(@fileInfo.Extension);
-					progressBar.Dispatcher.Invoke(() => progressBar.Value += 1, DispatcherPriority.Background);
+		private void CreateList(string sDir) {
+			try { 
+				folder = new Delimon.Win32.IO.DirectoryInfo(sDir);
 
-					// @lista = @fileInfo.Length + "\t" + @fileInfo.DirectoryName + "\t" + @fileInfo.Name + "\t" + @fileInfo.Extension + Environment.NewLine;
-					// sb.Append(@lista);
+				foreach (Delimon.Win32.IO.FileInfo f in folder.GetFiles()) {
+					sb.Append($"{Environment.NewLine}{f.Length}\t{f.DirectoryName}\t{f.Name}\t{f.Extension}");
+					progressBar.Dispatcher.Invoke(() => ++progressBar.Value, DispatcherPriority.Background);
 				}
-			}
 
-			File.WriteAllText(baseDir + @"lista_arquivos.txt", sb.ToString());
+				foreach (string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
+					CreateList(d);
+				}
+			} catch {  }
+		}
+
+		private void create_List(object sender, RoutedEventArgs e) {
+			button.IsEnabled = false;
+			button1.IsEnabled = false;
+			sb = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
+
+			//Stopwatch stopWatch = new Stopwatch();
+			//stopWatch.Start();
+			CreateList(sPath);
+			System.IO.File.WriteAllText(baseDir + @"lista_arquivos.txt", sb.ToString());
+			//stopWatch.Stop();
+			//TimeSpan ts = stopWatch.Elapsed;
+			//string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
+			//Console.WriteLine("RunTime " + elapsedTime);
+			button.IsEnabled = true;
+			button1.IsEnabled = true;
 			System.Windows.Forms.MessageBox.Show($"O arquivo 'lista_arquivos.txt' foi criado em{Environment.NewLine}{baseDir}", "Arquivos processados com sucesso!", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 	}
 }
-
-// Debug.WriteLine("#Debug: File: " + fileInfo.Name + " Date:" + fileInfo.CreationTime.ToString("dd-MM-yyy"));
-// Directory.GetFiles.
-// "chcp 65001 & DIR " + folderpath + " /A:-D /O:NS /S | FIND ":" > lista.txt"

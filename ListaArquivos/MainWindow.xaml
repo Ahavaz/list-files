@@ -3,9 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:fa="http://schemas.fontawesome.io/icons/"
-        xmlns:local="clr-namespace:ListaArquivos"
-        mc:Ignorable="d"
+		mc:Ignorable="d"
         Title="i-luminas - Lista Arquivos v1.0" Height="350" Width="525" ResizeMode="NoResize" Icon="magnifying-glass.ico">
 	<Grid>
 		<Image x:Name="logo_png" Margin="9,9,9,150" Source="logo.png" Stretch="Fill" RenderTransformOrigin="0.5,0.5">
@@ -31,8 +29,5 @@
 			</ProgressBar.Foreground>
 		</ProgressBar>
 		<TextBlock x:Name="textBlock1" HorizontalAlignment="Center" Margin="0,266,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
-		<Grid  Margin="20">
-			<fa:ImageAwesome x:Name="loadingIcon" Icon="CircleOutlineNotch" Spin="True" Height="48" Width="48" Foreground="#FF0094D2" Visibility="Hidden" />
-		</Grid>
 	</Grid>
 </Window>
