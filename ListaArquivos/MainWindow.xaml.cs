@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using System.IO.Compression;
-//using System.IO;
+using System.Windows.Input;
 
 namespace ListaArquivos {
 	public partial class MainWindow : Window {
@@ -17,6 +17,8 @@ namespace ListaArquivos {
 		private String baseDir = AppDomain.CurrentDomain.BaseDirectory;
 		private Boolean validDir = true;
 		private StringBuilder sb;
+		//private StringBuilder zip;
+		private StringBuilder rep;
 
 		public MainWindow() => InitializeComponent();
 
@@ -36,9 +38,9 @@ namespace ListaArquivos {
 			FolderBrowserDialog folderDialog = new FolderBrowserDialog();
 			folderDialog.ShowNewFolderButton = false;
 			DialogResult result = folderDialog.ShowDialog();
-			//loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Visible, DispatcherPriority.Background);
 
 			if (result == System.Windows.Forms.DialogResult.OK) {
+				System.Windows.Application.Current.Dispatcher.Invoke(() => Mouse.OverrideCursor = System.Windows.Input.Cursors.Wait);
 				sPath = folderDialog.SelectedPath;
 				textBox.Text = sPath;
 				total = 0;
@@ -49,7 +51,7 @@ namespace ListaArquivos {
 				if (folder.Exists) {
 					validDir = true;
 					DirSearch(sPath);
-					//loadingIcon.Dispatcher.Invoke(() => loadingIcon.Visibility = Visibility.Hidden, DispatcherPriority.Background);
+					System.Windows.Application.Current.Dispatcher.Invoke(() => Mouse.OverrideCursor = null);
 
 					if (total != 0 && validDir) {
 						progressBar.Maximum = total;
@@ -67,23 +69,39 @@ namespace ListaArquivos {
 		}
 
 		private void CreateList(string sDir) {
-			try { 
+			try {
 				folder = new Delimon.Win32.IO.DirectoryInfo(sDir);
 
 				foreach (Delimon.Win32.IO.FileInfo f in folder.GetFiles()) {
-					sb.Append($"{Environment.NewLine}{f.Length}\t{f.DirectoryName}\t{f.Name}\t{f.Extension}");
+					sb.Append($"{Environment.NewLine}{f.Length}\t{f.DirectoryName}\t{f.Name}\t{f.Extension.ToLower()}");
 					progressBar.Dispatcher.Invoke(() => progressBar.Value++, DispatcherPriority.Background);
 
 					if (f.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-						using(ZipArchive archive = ZipFile.OpenRead(f.FullName)) {
+						using(ZipArchive archive = ZipFile.Open(f.FullName, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
 
 							foreach(ZipArchiveEntry entry in archive.Entries) {
-								ext = entry.Name.Substring(entry.Name.LastIndexOf("."));
-								sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}\t{entry.Name}\t{ext}");
 
-								if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-									fn = f.FullName;
-									ZipList(fn, entry);
+								if(entry.Name != "") {
+
+									if(entry.Name.Contains(".")) {
+										ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
+									} else {
+										ext = "null";
+									}
+									rep = new StringBuilder(@"\");
+
+									if(entry.FullName.Contains("/")) {
+										rep.Append(entry.FullName.Substring(0, entry.FullName.LastIndexOf("/")));
+										rep.Replace("/", @"\");
+									} else {
+										rep.Clear();
+									}
+									sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
+
+									if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
+										fn = f.FullName;
+										ZipList(fn, entry);
+									}
 								}
 							}
 						}
@@ -98,29 +116,57 @@ namespace ListaArquivos {
 
 		private void ZipList(string fullPath, ZipArchiveEntry entry) {
 			using(ZipArchive a = new ZipArchive(entry.Open())) {
-
 				foreach(ZipArchiveEntry e in a.Entries) {
-					ext = e.Name.Substring(e.Name.LastIndexOf("."));
-					sb.Append($"{Environment.NewLine}{e.Length}\t{fullPath}\\{entry.FullName}\t{e.Name}\t{ext}");
 
-					if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-						fn = $@"{fullPath}\{entry.FullName}";
-						ZipList(fn, e);
+					if(e.Name != "") {
+
+						if(e.Name.Contains(".")) {
+							ext = e.Name.Substring(e.Name.LastIndexOf(".")).ToLower();
+						} else {
+							ext = "null";
+						}
+						rep = new StringBuilder(@"\");
+
+						if(e.FullName.Contains("/")) {
+							rep.Append($@"{entry.FullName}\{e.FullName.Substring(0, e.FullName.LastIndexOf("/"))}");
+							rep.Replace("/", @"\");
+						} else {
+							rep.Append($"{entry.FullName}");
+							rep.Replace("/", @"\");
+						}
+						sb.Append($"{Environment.NewLine}{e.Length}\t{fullPath}{rep}\t{e.Name}\t{ext}");
+
+						if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
+							fn = $@"{fullPath}{rep}";
+							ZipList(fn, e);
+						}
 					}
 				}
 			}
 		}
 
 		private void create_List(object sender, RoutedEventArgs e) {
+			progressBar.Value = 0;
 			button.IsEnabled = false;
 			button1.IsEnabled = false;
 			sb = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
+			//zip = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
 
 			//Stopwatch stopWatch = new Stopwatch();
 			//stopWatch.Start();
 
 			CreateList(sPath);
-			System.IO.File.WriteAllText(baseDir + @"lista_arquivos.txt", sb.ToString());
+			System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
+
+			if(System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
+
+			using(ZipArchive archive = ZipFile.Open("lista_arquivos.zip", ZipArchiveMode.Create)) {
+				archive.CreateEntryFromFile($"{baseDir}lista_arquivos.txt", "lista_arquivos.txt", CompressionLevel.Fastest);
+			}
+
+			if(System.IO.File.Exists($"{baseDir}lista_arquivos.txt")) System.IO.File.Delete($"{baseDir}lista_arquivos.txt");
+
+			//System.IO.File.WriteAllText(baseDir + @"lista_arquivos_zip.txt", zip.ToString());
 
 			//stopWatch.Stop();
 			//TimeSpan ts = stopWatch.Elapsed;
@@ -129,7 +175,7 @@ namespace ListaArquivos {
 
 			button.IsEnabled = true;
 			button1.IsEnabled = true;
-			System.Windows.Forms.MessageBox.Show($"O arquivo 'lista_arquivos.txt' foi criado em{Environment.NewLine}{baseDir}", "Arquivos processados com sucesso!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			System.Windows.Forms.MessageBox.Show($"O arquivo 'lista_arquivos.zip' foi criado em{Environment.NewLine}{baseDir}", "Arquivos processados com sucesso!", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 	}
 }
