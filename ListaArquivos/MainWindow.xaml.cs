@@ -5,6 +5,8 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using System.IO.Compression;
 using System.Windows.Input;
+using Delimon.Win32.IO;
+using System.IO;
 
 namespace ListaArquivos {
 	public partial class MainWindow : Window {
@@ -111,11 +113,14 @@ namespace ListaArquivos {
 				foreach (string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
 					CreateList(d);
 				}
-			} catch { }
+			} catch {
+				//System.Windows.Forms.MessageBox.Show($"{exc.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 
 		private void ZipList(string fullPath, ZipArchiveEntry entry) {
 			using(ZipArchive a = new ZipArchive(entry.Open())) {
+
 				foreach(ZipArchiveEntry e in a.Entries) {
 
 					if(e.Name != "") {
@@ -156,15 +161,17 @@ namespace ListaArquivos {
 			//stopWatch.Start();
 
 			CreateList(sPath);
-			System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
+			//System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
+			//if (System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
 
-			if(System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
-
-			using(ZipArchive archive = ZipFile.Open("lista_arquivos.zip", ZipArchiveMode.Create)) {
-				archive.CreateEntryFromFile($"{baseDir}lista_arquivos.txt", "lista_arquivos.txt", CompressionLevel.Fastest);
+			using (var zipToOpen = new FileStream($"{baseDir}lista_arquivos.zip", System.IO.FileMode.Create)) {
+				using(var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update)) {
+					var listEntry = archive.CreateEntry("lista_arquivos.txt");
+					using(var writer = new StreamWriter(listEntry.Open())) {
+						writer.WriteLine(sb);
+					}
+				}
 			}
-
-			if(System.IO.File.Exists($"{baseDir}lista_arquivos.txt")) System.IO.File.Delete($"{baseDir}lista_arquivos.txt");
 
 			//System.IO.File.WriteAllText(baseDir + @"lista_arquivos_zip.txt", zip.ToString());
 
