@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Windows.Input;
 using Delimon.Win32.IO;
 using System.IO;
+using System.Diagnostics;
 
 namespace ListaArquivos {
 	public partial class MainWindow : Window {
@@ -26,6 +27,9 @@ namespace ListaArquivos {
 
 		private void DirSearch(string sDir) {
 			try {
+				//total = Delimon.Win32.IO.Directory.GetFiles(sDir, "*", Delimon.Win32.IO.SearchOption.AllDirectories).Length;
+				//Console.Write(total);
+
 				foreach (string f in Delimon.Win32.IO.Directory.GetFiles(sDir)) {
 					total++;
 				}
@@ -33,7 +37,10 @@ namespace ListaArquivos {
 				foreach (string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
 					DirSearch(d);
 				}
-			} catch { validDir = true; }
+			} catch {
+				//validDir = true;
+				//System.Windows.Forms.MessageBox.Show($"{exc.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
 		}
 
 		private void select_Dir(object sender, RoutedEventArgs e) {
@@ -52,7 +59,18 @@ namespace ListaArquivos {
 
 				if (folder.Exists) {
 					validDir = true;
+
+					Stopwatch stopWatch = new Stopwatch();
+					stopWatch.Start();
+
 					DirSearch(sPath);
+
+					stopWatch.Stop();
+					TimeSpan ts = stopWatch.Elapsed;
+					string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
+					Console.WriteLine($"DirSearch RunTime {elapsedTime}");
+					System.Windows.Forms.MessageBox.Show(elapsedTime, "DirSearch RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
 					System.Windows.Application.Current.Dispatcher.Invoke(() => Mouse.OverrideCursor = null);
 
 					if (total != 0 && validDir) {
@@ -157,10 +175,17 @@ namespace ListaArquivos {
 			sb = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
 			//zip = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
 
-			//Stopwatch stopWatch = new Stopwatch();
-			//stopWatch.Start();
+			Stopwatch stopWatch = new Stopwatch();
+			stopWatch.Start();
 
 			CreateList(sPath);
+
+			stopWatch.Stop();
+			TimeSpan ts = stopWatch.Elapsed;
+			string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
+			Console.WriteLine($"CreateList RunTime {elapsedTime}");
+			System.Windows.Forms.MessageBox.Show(elapsedTime, "CreateList RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
 			//System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
 			//if (System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
 
@@ -175,10 +200,6 @@ namespace ListaArquivos {
 
 			//System.IO.File.WriteAllText(baseDir + @"lista_arquivos_zip.txt", zip.ToString());
 
-			//stopWatch.Stop();
-			//TimeSpan ts = stopWatch.Elapsed;
-			//string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds / 10);
-			//Console.WriteLine("RunTime " + elapsedTime);
 
 			button.IsEnabled = true;
 			button1.IsEnabled = true;
