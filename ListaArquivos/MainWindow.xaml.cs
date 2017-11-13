@@ -5,13 +5,14 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using System.IO.Compression;
 using System.Windows.Input;
-using Delimon.Win32.IO;
-using System.IO;
 using System.Diagnostics;
+using ICSharpCode.SharpZipLib.Core;
+using ICSharpCode.SharpZipLib.Zip;
 
-namespace ListaArquivos {
+namespace ListaArquivos
+{
 	public partial class MainWindow : Window {
-
+		
 		private String sPath;
 		private String fn;
 		private String ext;
@@ -22,8 +23,14 @@ namespace ListaArquivos {
 		private StringBuilder sb;
 		//private StringBuilder zip;
 		private StringBuilder rep;
+		private System.IO.FileStream fs;
+		private Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
 
-		public MainWindow() => InitializeComponent();
+		public MainWindow() {
+			InitializeComponent();
+			//String stringVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
+			Title = $"i-luminas - Lista Arquivos {version.Major}.{version.Minor}.{version.Build.ToString().Substring(0,1)}";
+		}
 
 		private void DirSearch(string sDir) {
 			try {
@@ -38,7 +45,7 @@ namespace ListaArquivos {
 					DirSearch(d);
 				}
 			} catch {
-				//validDir = true;
+				//validDir = false;
 				//System.Windows.Forms.MessageBox.Show($"{exc.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
 		}
@@ -97,34 +104,43 @@ namespace ListaArquivos {
 					progressBar.Dispatcher.Invoke(() => progressBar.Value++, DispatcherPriority.Background);
 
 					if (f.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-						using(ZipArchive archive = ZipFile.Open(f.FullName, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
+						//using (var fs = new System.IO.StreamReader(Delimon.Win32.IO.File.OpenRead(f.FullName), Encoding.GetEncoding(850))) {
+						//using(ZipArchive archive = ZipFile.Open(f.FullName, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
+							fs = Delimon.Win32.IO.File.OpenRead(f.FullName);
 
-							foreach(ZipArchiveEntry entry in archive.Entries) {
+							//ICSharpCode.SharpZipLib.Zip.ZipFile zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(fs);
+							//System.IO.Stream zipStream = zipFile.GetInputStream(fs);
 
-								if(entry.Name != "") {
+							//System.IO.Stream Fs = fs;
+							using (var archive = new ZipArchive(fs)) {
 
-									if(entry.Name.Contains(".")) {
-										ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
-									} else {
-										ext = "null";
-									}
-									rep = new StringBuilder(@"\");
+								foreach (ZipArchiveEntry entry in archive.Entries) {
+								
+									if (entry.Name != "") {
 
-									if(entry.FullName.Contains("/")) {
-										rep.Append(entry.FullName.Substring(0, entry.FullName.LastIndexOf("/")));
-										rep.Replace("/", @"\");
-									} else {
-										rep.Clear();
-									}
-									sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
+										if (entry.Name.Contains(".")) {
+											ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
+										} else {
+											ext = "null";
+										}
+										rep = new StringBuilder(@"\");
 
-									if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-										fn = f.FullName;
-										ZipList(fn, entry);
+										if (entry.FullName.Contains("/")) {
+											rep.Append(entry.FullName.Substring(0, entry.FullName.LastIndexOf("/")));
+											rep.Replace("/", @"\");
+										} else {
+											rep.Clear();
+										}
+										sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
+
+										if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
+											fn = f.FullName;
+											ZipList(fn, entry);
+										}
 									}
 								}
 							}
-						}
+						//}
 					}
 				}
 
@@ -136,32 +152,32 @@ namespace ListaArquivos {
 			}
 		}
 
-		private void ZipList(string fullPath, ZipArchiveEntry entry) {
-			using(ZipArchive a = new ZipArchive(entry.Open())) {
+		private void ZipList(string fullPath, ZipArchiveEntry e) {
+			using(ZipArchive archive = new ZipArchive(e.Open())) {
 
-				foreach(ZipArchiveEntry e in a.Entries) {
+				foreach(ZipArchiveEntry entry in archive.Entries) {
 
-					if(e.Name != "") {
+					if(entry.Name != "") {
 
-						if(e.Name.Contains(".")) {
-							ext = e.Name.Substring(e.Name.LastIndexOf(".")).ToLower();
+						if(entry.Name.Contains(".")) {
+							ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
 						} else {
 							ext = "null";
 						}
 						rep = new StringBuilder(@"\");
 
-						if(e.FullName.Contains("/")) {
-							rep.Append($@"{entry.FullName}\{e.FullName.Substring(0, e.FullName.LastIndexOf("/"))}");
+						if(entry.FullName.Contains("/")) {
+							rep.Append($@"{e.FullName}\{entry.FullName.Substring(0, entry.FullName.LastIndexOf("/"))}");
 							rep.Replace("/", @"\");
 						} else {
-							rep.Append($"{entry.FullName}");
+							rep.Append($"{e.FullName}");
 							rep.Replace("/", @"\");
 						}
-						sb.Append($"{Environment.NewLine}{e.Length}\t{fullPath}{rep}\t{e.Name}\t{ext}");
+						sb.Append($"{Environment.NewLine}{entry.Length}\t{fullPath}{rep}\t{entry.Name}\t{ext}");
 
 						if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
 							fn = $@"{fullPath}{rep}";
-							ZipList(fn, e);
+							ZipList(fn, entry);
 						}
 					}
 				}
@@ -189,17 +205,16 @@ namespace ListaArquivos {
 			//System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
 			//if (System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
 
-			using (var zipToOpen = new FileStream($"{baseDir}lista_arquivos.zip", System.IO.FileMode.Create)) {
+			using (var zipToOpen = new System.IO.FileStream($"{baseDir}lista_arquivos.zip", System.IO.FileMode.Create)) {
 				using(var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update)) {
 					var listEntry = archive.CreateEntry("lista_arquivos.txt");
-					using(var writer = new StreamWriter(listEntry.Open())) {
+					using(var writer = new System.IO.StreamWriter(listEntry.Open())) {
 						writer.WriteLine(sb);
 					}
 				}
 			}
 
 			//System.IO.File.WriteAllText(baseDir + @"lista_arquivos_zip.txt", zip.ToString());
-
 
 			button.IsEnabled = true;
 			button1.IsEnabled = true;
