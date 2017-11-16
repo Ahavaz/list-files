@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		mc:Ignorable="d"
-        Title="" Height="357" Width="700" ResizeMode="NoResize" Icon="magnifying-glass.ico" WindowStartupLocation="CenterScreen">
+        Title="" Height="357" Width="700" ResizeMode="CanMinimize" Icon="magnifying-glass.ico" WindowStartupLocation="CenterScreen">
 	<Grid>
 		<Image x:Name="logo_png" Margin="9,9,9,150" Source="logo.png" Stretch="Fill" RenderTransformOrigin="0.5,0.5">
 			<Image.RenderTransform>
@@ -18,8 +18,8 @@
 		</Image>
 		<TextBlock x:Name="textBlock" HorizontalAlignment="Center" Margin="0,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Escolha o diretório raiz onde se encontram os arquivos a serem processados:" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
 		<TextBox x:Name="textBox" Text="" HorizontalAlignment="Center" Height="22" Margin="0,206,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="600" IsEnabled="False" TextAlignment="Left" FontSize="14"/>
-		<Button x:Name="button" Content="Selecionar diretório" Margin="42,243,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Click="select_Dir" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
-		<Button x:Name="button1" Content="Gerar lista" Margin="0,243,42,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="120" Click="create_List" IsEnabled="False" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
+		<Button x:Name="button" Content="Selecionar diretório" Margin="47,243,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Click="select_Dir" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
+		<Button x:Name="button1" Content="Gerar lista" Margin="0,243,47,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="120" Click="create_List" IsEnabled="False" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
 		<ProgressBar x:Name="progressBar" HorizontalAlignment="Center" Height="13" Margin="0,289,0,0" VerticalAlignment="Top" Width="600" Background="#FFE6E6E6" BorderBrush="#FFBCBCBC">
 			<ProgressBar.Foreground>
 				<LinearGradientBrush EndPoint="1,0.5" MappingMode="RelativeToBoundingBox" StartPoint="0,0.5">

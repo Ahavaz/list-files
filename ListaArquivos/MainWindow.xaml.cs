@@ -6,11 +6,8 @@ using System.Windows.Threading;
 using System.IO.Compression;
 using System.Windows.Input;
 using System.Diagnostics;
-using ICSharpCode.SharpZipLib.Core;
-using ICSharpCode.SharpZipLib.Zip;
 
-namespace ListaArquivos
-{
+namespace ListaArquivos {
 	public partial class MainWindow : Window {
 		
 		private String sPath;
@@ -25,6 +22,7 @@ namespace ListaArquivos
 		private StringBuilder rep;
 		private System.IO.FileStream fs;
 		private Version version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+		//private String name;
 
 		public MainWindow() {
 			InitializeComponent();
@@ -76,7 +74,7 @@ namespace ListaArquivos
 					TimeSpan ts = stopWatch.Elapsed;
 					string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
 					Console.WriteLine($"DirSearch RunTime {elapsedTime}");
-					System.Windows.Forms.MessageBox.Show(elapsedTime, "DirSearch RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
+					//System.Windows.Forms.MessageBox.Show(elapsedTime, "DirSearch RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
 					System.Windows.Application.Current.Dispatcher.Invoke(() => Mouse.OverrideCursor = null);
 
@@ -95,6 +93,16 @@ namespace ListaArquivos
 			}
 		}
 
+		//private String DecodeStream(string s) {
+		//	Encoding defEnc = Encoding.Default;
+		//	Encoding isoEnc = Encoding.GetEncoding(850);
+		//	byte[] defBytes = defEnc.GetBytes(s);
+		//	byte[] isoBytes = Encoding.Convert(defEnc, isoEnc, defBytes);
+		//	name = isoEnc.GetString(isoBytes);
+
+		//	return name;
+		//}
+
 		private void CreateList(string sDir) {
 			try {
 				folder = new Delimon.Win32.IO.DirectoryInfo(sDir);
@@ -105,46 +113,46 @@ namespace ListaArquivos
 
 					if (f.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
 						//using (var fs = new System.IO.StreamReader(Delimon.Win32.IO.File.OpenRead(f.FullName), Encoding.GetEncoding(850))) {
-						//using(ZipArchive archive = ZipFile.Open(f.FullName, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
-							fs = Delimon.Win32.IO.File.OpenRead(f.FullName);
+						//using(ZipArchive archive = new ZipArchive(fs, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
 
-							//ICSharpCode.SharpZipLib.Zip.ZipFile zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(fs);
-							//System.IO.Stream zipStream = zipFile.GetInputStream(fs);
+						//ICSharpCode.SharpZipLib.Zip.ZipFile zipFile = new ICSharpCode.SharpZipLib.Zip.ZipFile(fs);
+						//System.IO.Stream zipStream = zipFile.GetInputStream(fs);
+						fs = Delimon.Win32.IO.File.OpenRead(f.FullName);
 
-							//System.IO.Stream Fs = fs;
-							using (var archive = new ZipArchive(fs)) {
+						using(var archive = new ZipArchive(fs, ZipArchiveMode.Read, false, Encoding.GetEncoding(850))) {
 
-								foreach (ZipArchiveEntry entry in archive.Entries) {
-								
-									if (entry.Name != "") {
+							foreach(ZipArchiveEntry entry in archive.Entries) {
 
-										if (entry.Name.Contains(".")) {
-											ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
-										} else {
-											ext = "null";
-										}
-										rep = new StringBuilder(@"\");
+								if(entry.Name != "") {
 
-										if (entry.FullName.Contains("/")) {
-											rep.Append(entry.FullName.Substring(0, entry.FullName.LastIndexOf("/")));
-											rep.Replace("/", @"\");
-										} else {
-											rep.Clear();
-										}
-										sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
+									if(entry.Name.Contains(".")) {
+										ext = entry.Name.Substring(entry.Name.LastIndexOf(".")).ToLower();
+									} else {
+										ext = "null";
+									}
+									rep = new StringBuilder(@"\");
 
-										if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-											fn = f.FullName;
-											ZipList(fn, entry);
-										}
+									if(entry.FullName.Contains("/")) {
+										rep.Append(entry.FullName.Substring(0, entry.FullName.LastIndexOf("/")));
+										rep.Replace("/", @"\");
+									} else {
+										rep.Clear();
+									}
+									sb.Append($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
+
+									if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
+										fn = f.FullName;
+										ZipList(fn, entry);
 									}
 								}
 							}
+						}
+						//}
 						//}
 					}
 				}
 
-				foreach (string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
+				foreach(string d in Delimon.Win32.IO.Directory.GetDirectories(sDir)) {
 					CreateList(d);
 				}
 			} catch {
@@ -153,7 +161,8 @@ namespace ListaArquivos
 		}
 
 		private void ZipList(string fullPath, ZipArchiveEntry e) {
-			using(ZipArchive archive = new ZipArchive(e.Open())) {
+
+			using(var archive = new ZipArchive(e.Open())) {
 
 				foreach(ZipArchiveEntry entry in archive.Entries) {
 
@@ -200,14 +209,17 @@ namespace ListaArquivos
 			TimeSpan ts = stopWatch.Elapsed;
 			string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
 			Console.WriteLine($"CreateList RunTime {elapsedTime}");
-			System.Windows.Forms.MessageBox.Show(elapsedTime, "CreateList RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			//System.Windows.Forms.MessageBox.Show(elapsedTime, "CreateList RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
 			//System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
 			//if (System.IO.File.Exists($"{baseDir}lista_arquivos.zip")) System.IO.File.Delete($"{baseDir}lista_arquivos.zip");
 
 			using (var zipToOpen = new System.IO.FileStream($"{baseDir}lista_arquivos.zip", System.IO.FileMode.Create)) {
+
 				using(var archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update)) {
+
 					var listEntry = archive.CreateEntry("lista_arquivos.txt");
+
 					using(var writer = new System.IO.StreamWriter(listEntry.Open())) {
 						writer.WriteLine(sb);
 					}
