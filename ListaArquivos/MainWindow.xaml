@@ -5,29 +5,160 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		mc:Ignorable="d"
         Title="" Height="357" Width="700" ResizeMode="CanMinimize" Icon="magnifying-glass.ico" WindowStartupLocation="CenterScreen">
-	<Grid>
-		<Image x:Name="logo_png" Margin="9,9,9,150" Source="logo.png" Stretch="Fill" RenderTransformOrigin="0.5,0.5">
-			<Image.RenderTransform>
-				<TransformGroup>
-					<ScaleTransform ScaleX="0.5" ScaleY="0.67"/>
-					<SkewTransform/>
-					<RotateTransform/>
-					<TranslateTransform/>
-				</TransformGroup>
-			</Image.RenderTransform>
-		</Image>
-		<TextBlock x:Name="textBlock" HorizontalAlignment="Center" Margin="0,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Escolha o diretório raiz onde se encontram os arquivos a serem processados:" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
-		<TextBox x:Name="textBox" Text="" HorizontalAlignment="Center" Height="22" Margin="0,206,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="600" IsEnabled="False" TextAlignment="Left" FontSize="14"/>
-		<Button x:Name="button" Content="Selecionar diretório" Margin="47,243,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Click="select_Dir" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
-		<Button x:Name="button1" Content="Gerar lista" Margin="0,243,47,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="120" Click="create_List" IsEnabled="False" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Foreground="#FF0094D2" BorderBrush="#FF0094D2" Height="30" Cursor="Hand"/>
-		<ProgressBar x:Name="progressBar" HorizontalAlignment="Center" Height="13" Margin="0,289,0,0" VerticalAlignment="Top" Width="600" Background="#FFE6E6E6" BorderBrush="#FFBCBCBC">
-			<ProgressBar.Foreground>
-				<LinearGradientBrush EndPoint="1,0.5" MappingMode="RelativeToBoundingBox" StartPoint="0,0.5">
-					<GradientStop Color="#FFE6E6E6"/>
-					<GradientStop Color="#FF0094D2" Offset="1"/>
-				</LinearGradientBrush>
-			</ProgressBar.Foreground>
-		</ProgressBar>
-		<TextBlock x:Name="textBlock1" HorizontalAlignment="Center" Margin="0,250,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
-	</Grid>
+    <Window.Resources>
+        <Style x:Key="FocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Rectangle Margin="2" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!--<SolidColorBrush x:Key="Button.Static.Background" Color="#FFDDDDDD"/>-->
+        <SolidColorBrush x:Key="Button.Static.Background" Color="White"/>
+        <SolidColorBrush x:Key="Button.Static.Border" Color="#FF0094D2"/>
+        <SolidColorBrush x:Key="Button.MouseOver.Background" Color="#FF0094D2"/>
+        <SolidColorBrush x:Key="Button.MouseOver.Border" Color="#FF0094D2"/>
+        <SolidColorBrush x:Key="Button.MouseOver.Foreground" Color="White"/>
+        <SolidColorBrush x:Key="Button.Pressed.Background" Color="#FFC4E5F6"/>
+        <SolidColorBrush x:Key="Button.Pressed.Border" Color="#FFC4E5F6"/>
+        <!--<SolidColorBrush x:Key="Button.Disabled.Background" Color="#FFF4F4F4"/>
+        <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFADB2B5"/>
+        <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FF838383"/>-->
+        <SolidColorBrush x:Key="Button.Disabled.Background" Color="White"/>
+        <SolidColorBrush x:Key="Button.Disabled.Border" Color="#FFF4F4F4"/>
+        <SolidColorBrush x:Key="Button.Disabled.Foreground" Color="#FFF4F4F4"/>
+        <Style x:Key="ButtonStyle1" TargetType="{x:Type Button}">
+            <Setter Property="FocusVisualStyle" Value="{StaticResource FocusVisual}"/>
+            <Setter Property="Background" Value="{StaticResource Button.Static.Background}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource Button.Static.Border}"/>
+            <!--Foreground="#FF0094D2" BorderBrush="#FF0094D2"-->
+            <!--<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>-->
+            <Setter Property="Foreground" Value="#FF0094D2"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Padding" Value="1"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border" CornerRadius="15" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="true">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualStateGroup.Transitions>
+                                        <VisualTransition From="Normal" GeneratedDuration="0:0:3" To="MouseOver">
+                                            <VisualTransition.GeneratedEasingFunction>
+                                                <CubicEase EasingMode="EaseInOut"/>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                        <VisualTransition From="MouseOver" GeneratedDuration="0:0:3" To="Normal">
+                                            <VisualTransition.GeneratedEasingFunction>
+                                                <CubicEase EasingMode="EaseInOut"/>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                        <VisualTransition GeneratedDuration="0:0:3">
+                                            <VisualTransition.GeneratedEasingFunction>
+                                                <CubicEase EasingMode="EaseInOut"/>
+                                            </VisualTransition.GeneratedEasingFunction>
+                                        </VisualTransition>
+                                    </VisualStateGroup.Transitions>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <ContentPresenter x:Name="contentPresenter" Focusable="False" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsDefaulted" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="{DynamicResource {x:Static SystemColors.HighlightBrushKey}}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.MouseOver.Background}"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.MouseOver.Border}"/>
+                                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource Button.MouseOver.Foreground}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="true">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Pressed.Background}"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Pressed.Border}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Background" TargetName="border" Value="{StaticResource Button.Disabled.Background}"/>
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource Button.Disabled.Border}"/>
+                                <Setter Property="TextElement.Foreground" TargetName="contentPresenter" Value="{StaticResource Button.Disabled.Foreground}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <SolidColorBrush x:Key="TextBox.Static.Border" Color="#FFABAdB3"/>
+        <SolidColorBrush x:Key="TextBox.MouseOver.Border" Color="#FF7EB4EA"/>
+        <SolidColorBrush x:Key="TextBox.Focus.Border" Color="#FF569DE5"/>
+        <Style x:Key="TextBoxStyle1" TargetType="{x:Type TextBox}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource TextBox.Static.Border}"/>
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="KeyboardNavigation.TabNavigation" Value="None"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="AllowDrop" Value="true"/>
+            <Setter Property="ScrollViewer.PanningMode" Value="VerticalFirst"/>
+            <Setter Property="Stylus.IsFlicksEnabled" Value="False"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type TextBox}">
+                        <Border x:Name="border" CornerRadius="5" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost" Focusable="false" HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Hidden"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="false">
+                                <Setter Property="Opacity" TargetName="border" Value="0.56"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource TextBox.MouseOver.Border}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="true">
+                                <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource TextBox.Focus.Border}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <MultiTrigger>
+                    <MultiTrigger.Conditions>
+                        <Condition Property="IsInactiveSelectionHighlightEnabled" Value="true"/>
+                        <Condition Property="IsSelectionActive" Value="false"/>
+                    </MultiTrigger.Conditions>
+                    <Setter Property="SelectionBrush" Value="{DynamicResource {x:Static SystemColors.InactiveSelectionHighlightBrushKey}}"/>
+                </MultiTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Image x:Name="logo_png" Margin="9,9,9,150" Source="logo.png" Stretch="Fill" RenderTransformOrigin="0.5,0.5">
+            <Image.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform ScaleX="0.5" ScaleY="0.67"/>
+                    <SkewTransform/>
+                    <RotateTransform/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Image.RenderTransform>
+        </Image>
+        <TextBlock x:Name="textBlock" HorizontalAlignment="Center" Margin="0,177,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Text="Escolha o diretório raiz onde se encontram os arquivos a serem processados:" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
+        <TextBox x:Name="textBox" Text="" HorizontalAlignment="Center" Height="22" Margin="0,206,0,0" TextWrapping="NoWrap" VerticalAlignment="Top" Width="600" IsEnabled="False" TextAlignment="Left" FontSize="14" Style="{DynamicResource TextBoxStyle1}"/>
+        <Button x:Name="button" Content="Selecionar diretório" Margin="47,248,0,0" VerticalAlignment="Top" HorizontalAlignment="Left" Width="120" Click="select_Dir" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Height="30" Cursor="Hand" Style="{DynamicResource ButtonStyle1}"/>
+        <Button x:Name="button1" Content="Gerar lista" Margin="0,248,47,0" VerticalAlignment="Top" HorizontalAlignment="Right" Width="120" Click="create_List" IsEnabled="False" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="13" Height="30" Cursor="Hand" Style="{DynamicResource ButtonStyle1}"/>
+        <ProgressBar x:Name="progressBar" BorderThickness="0" HorizontalAlignment="Center" Height="13" Margin="0,0,0,18" VerticalAlignment="Bottom" Width="600" Background="#FFE6E6E6" BorderBrush="#FFBCBCBC">
+            <ProgressBar.Foreground>
+                <LinearGradientBrush EndPoint="1,0.5" MappingMode="RelativeToBoundingBox" StartPoint="0,0.5">
+                    <GradientStop Color="#FFE6E6E6"/>
+                    <GradientStop Color="#FF0094D2" Offset="1"/>
+                </LinearGradientBrush>
+            </ProgressBar.Foreground>
+        </ProgressBar>
+        <TextBlock x:Name="textBlock1" HorizontalAlignment="Center" Margin="0,255,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
+    </Grid>
 </Window>
