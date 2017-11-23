@@ -159,6 +159,7 @@
                 </LinearGradientBrush>
             </ProgressBar.Foreground>
         </ProgressBar>
-        <TextBlock x:Name="textBlock1" HorizontalAlignment="Center" Margin="0,255,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
+        <TextBlock x:Name="textBlock1" HorizontalAlignment="Center" Margin="0,245,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
+		<TextBlock x:Name="textBlock2" HorizontalAlignment="Center" Margin="0,265,0,0" TextWrapping="NoWrap" Text="" VerticalAlignment="Top" FontFamily="/ListaArquivos;component/#Titillium Web SemiBold" FontSize="14" Foreground="#FF878786"/>
     </Grid>
 </Window>

@@ -7,6 +7,9 @@ using System.IO.Compression;
 using System.Windows.Input;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Spire.Doc;
+using PdfSharp.Pdf;
+using PdfSharp.Pdf.IO;
 
 namespace ListaArquivos {
 	public partial class MainWindow : Window {
@@ -15,6 +18,10 @@ namespace ListaArquivos {
 		private String fn;
 		private String ext;
 		private Int64 total;
+		private Int64 wordPages;
+		private Int64 wordFiles;
+		private Int64 pdfPages;
+		private Int64 pdfFiles;
 		private Delimon.Win32.IO.DirectoryInfo folder;
 		private String baseDir = AppDomain.CurrentDomain.BaseDirectory;
 		private Boolean validDir = true;
@@ -26,7 +33,7 @@ namespace ListaArquivos {
         //private String name;
         private List<String> lista = new List<String>();
 
-        public MainWindow() {
+		public MainWindow() {
 			InitializeComponent();
 			//String stringVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString();
 			Title = $"i-luminas - Lista Arquivos {version.Major}.{version.Minor}.{version.Build.ToString().Substring(0,1)}";
@@ -60,6 +67,7 @@ namespace ListaArquivos {
 				sPath = folderDialog.SelectedPath;
 				textBox.Text = sPath;
 				total = 0;
+				textBlock2.Text = "";
 				progressBar.Minimum = 0;
 				progressBar.Value = 0;
 				folder = new Delimon.Win32.IO.DirectoryInfo(sPath);
@@ -129,6 +137,26 @@ namespace ListaArquivos {
 
                     progressBar.Dispatcher.Invoke(() => progressBar.Value++, DispatcherPriority.Background);
 
+					if(f.Extension.Equals(".pdf", StringComparison.OrdinalIgnoreCase)) {
+						using (var stream = Delimon.Win32.IO.File.OpenRead(f.FullName)) {
+							using (var ms = new System.IO.MemoryStream()) {
+								stream.CopyTo(ms);
+								ms.Position = 0;
+								CountPdfPages(ms);
+							}
+						}
+					}
+
+					if(f.Extension.Equals(".doc", StringComparison.OrdinalIgnoreCase) || f.Extension.Equals(".docx", StringComparison.OrdinalIgnoreCase)) {
+						using (var stream = Delimon.Win32.IO.File.OpenRead(f.FullName)) {
+							using (var ms = new System.IO.MemoryStream()) {
+								stream.CopyTo(ms);
+								ms.Position = 0;
+								CountWordPages(ms);
+							}
+						}
+					}
+
 					if(f.Extension.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
 						//using (var fs = new System.IO.StreamReader(Delimon.Win32.IO.File.OpenRead(f.FullName), Encoding.GetEncoding(850))) {
 						//using(ZipArchive archive = new ZipArchive(fs, ZipArchiveMode.Read, Encoding.GetEncoding(850))) {
@@ -157,7 +185,6 @@ namespace ListaArquivos {
 										rep.Clear();
 									}
 
-
                                     lista.Add($"{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
                                     //await FileWriteAsync($"{Environment.NewLine}{entry.Length}\t{f.FullName}{rep}\t{entry.Name}\t{ext}");
                                     //using (System.IO.StreamWriter w = Delimon.Win32.IO.File.AppendText($"{baseDir}lista_arquivos.txt")) {
@@ -173,9 +200,29 @@ namespace ListaArquivos {
                                         lista.TrimExcess();
                                     }
 
-                                if (ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
-										fn = f.FullName;
-										ZipList(fn, entry);
+									if(ext.Equals(".pdf", StringComparison.OrdinalIgnoreCase)) {
+										using (var stream = entry.Open()) {
+											using (var ms = new System.IO.MemoryStream()) {
+												stream.CopyTo(ms);
+												ms.Position = 0;
+												CountPdfPages(ms);
+											}
+										}
+									}
+
+									if(ext.Equals(".doc", StringComparison.OrdinalIgnoreCase) || ext.Equals(".docx", StringComparison.OrdinalIgnoreCase)) {
+										using (var stream = entry.Open()) {
+											using (var ms = new System.IO.MemoryStream()) {
+												stream.CopyTo(ms);
+												ms.Position = 0;
+												CountWordPages(ms);
+											}
+										}
+									}
+
+									if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
+											fn = f.FullName;
+											ZipList(fn, entry);
 									}
 								}
 							}
@@ -191,6 +238,31 @@ namespace ListaArquivos {
 			} catch {
 				//System.Windows.Forms.MessageBox.Show($"{exc.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
 			}
+		}
+
+		private void CountPdfPages(System.IO.MemoryStream stream) {
+			try {
+				PdfDocument pdf = PdfReader.Open(stream);
+				pdfPages += pdf.PageCount;
+				pdfFiles++;
+			} catch(Exception e) {
+				Console.WriteLine($"{e.Message}");
+				//System.Windows.Forms.MessageBox.Show($"{e.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			//throw new NotImplementedException();
+		}
+
+		private void CountWordPages(System.IO.MemoryStream stream) {
+			try {
+				Document doc = new Document();
+				doc.LoadFromStream(stream, FileFormat.Auto);
+				wordPages += doc.PageCount;
+				wordFiles++;
+			} catch(Exception e) {
+				Console.WriteLine($"{e.Message}");
+				//System.Windows.Forms.MessageBox.Show($"{e.Message}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+			}
+			//throw new NotImplementedException();
 		}
 
 		private void ZipList(string fullPath, ZipArchiveEntry e) {
@@ -231,6 +303,26 @@ namespace ListaArquivos {
                             lista.TrimExcess();
                         }
 
+						if(ext.Equals(".pdf", StringComparison.OrdinalIgnoreCase)) {
+							using (var stream = entry.Open()) {
+								using (var ms = new System.IO.MemoryStream()) {
+									stream.CopyTo(ms);
+									ms.Position = 0;
+									CountPdfPages(ms);
+								}
+							}
+						}
+
+						if(ext.Equals(".doc", StringComparison.OrdinalIgnoreCase) || ext.Equals(".docx", StringComparison.OrdinalIgnoreCase)) {
+							using (var stream = entry.Open()) {
+								using (var ms = new System.IO.MemoryStream()) {
+									stream.CopyTo(ms);
+									ms.Position = 0;
+									CountWordPages(ms);
+								}
+							}
+						}
+
                         if(ext.Equals(".zip", StringComparison.OrdinalIgnoreCase)) {
 							fn = $@"{fullPath}{rep}";
 							ZipList(fn, entry);
@@ -251,6 +343,10 @@ namespace ListaArquivos {
 
             if(System.IO.File.Exists($"{baseDir}lista_arquivos.txt")) System.IO.File.Delete($"{baseDir}lista_arquivos.txt");
 			progressBar.Value = 0;
+			wordPages = 0;
+			wordFiles = 0;
+			pdfPages = 0;
+			pdfFiles = 0;
 			button.IsEnabled = false;
 			button1.IsEnabled = false;
             //sb = new StringBuilder("Tamanho (bytes)\tCaminho\tArquivo\tExtensão");
@@ -267,11 +363,13 @@ namespace ListaArquivos {
 			TimeSpan ts = stopWatch.Elapsed;
 			string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}", ts.Hours, ts.Minutes, ts.Seconds, ts.Milliseconds);
 			Console.WriteLine($"CreateList RunTime {elapsedTime}");
-            //System.Windows.Forms.MessageBox.Show(elapsedTime, "CreateList RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
+			//System.Windows.Forms.MessageBox.Show(elapsedTime, "CreateList RunTime", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-            //System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
+			textBlock2.Text = "Total de páginas (PDF e Word): " + String.Format("{0:n0}", pdfPages + wordPages);
 
-            System.IO.File.AppendAllLines($"{baseDir}lista_arquivos.txt", lista);
+			//System.IO.File.WriteAllText($"{baseDir}lista_arquivos.txt", sb.ToString());
+
+			System.IO.File.AppendAllLines($"{baseDir}lista_arquivos.txt", lista);
             lista.Clear();
             lista.TrimExcess();
 
@@ -300,6 +398,8 @@ namespace ListaArquivos {
 			button.IsEnabled = true;
 			button1.IsEnabled = true;
 			System.Windows.Forms.MessageBox.Show($"O arquivo 'lista_arquivos.zip' foi criado em{Environment.NewLine}{baseDir}", "Arquivos processados com sucesso!", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+			//System.Windows.Forms.MessageBox.Show($"Há {pdfFiles} documentos PDF totalizando {pdfPages} página(s).\r\nHá {wordFiles} documentos Word totalizando {wordPages} página(s).", "Páginas", MessageBoxButtons.OK, MessageBoxIcon.Information);
 		}
 	}
 }
